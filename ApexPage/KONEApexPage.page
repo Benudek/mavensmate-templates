@@ -1,0 +1,17 @@
+<!-- **********************************************************************
+ Name: %PageName%
+======================================================
+Description: 
+	Sample description
+======================================================
+History                                                            
+-------                                                            
+VERSION         AUTHOR                  DATE            DETAIL                                 
+1.0             John Doe  				29/08/1997		Initial development
+***********************************************************************-->
+<!-- For controller and extensions
+standardController="sObect" extensions="ApexClass" title="My New Page" -->
+
+<apex:page showHeader="true" sidebar="true">
+	
+</apex:page>
