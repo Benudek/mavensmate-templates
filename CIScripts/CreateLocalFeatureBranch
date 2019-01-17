@@ -2,43 +2,14 @@
 
 # for usage and functionality information run this program w/o arguments
 
-CODE:
-
-Make sure crlf is converted to lf when committing changed
-NOTE: Dependent on your own configuration, you might want to apply changes to the specific repository only. Then use --local instead of --global.
->git config --global core.autocrlf input
-
-Ignore any file permission changes
->git config --global core.filemode false
-
-
-Add the remote reference to the KONE github repository with the name "upstream"
-> git remote add upstream https://github.com/konecorp/SFDC-MAIN.git
-
-Add the remote reference to your fork of the KONE github repository with the name "origin" (replace patrickbrinksma by your github username)
-> git remote add origin https://github.com/Username/SFDC-MAIN.git
-
- git remote -v
-
-
-— adjust this to be sure, what you pulling:
-
-Populate your local repository with the latest content from your forked github repository (origin)
-> git pull origin fsmdev
-Adjust this for a new branch
-> > git checkout --track origin/fsmdev
-
-> show remote branches
-> git branch -a 
-
 
 me=$(basename "$0")
-if [[ "$#" -gt 6] or ["$#" -lt 4]]; then
+if [ "$#" -gt 6 ] || [ "$#" -lt 4 ]; then
     echo "This program will checkout a forked version of the original repository, sync it with the original, create a new branch and set it up for a PR."
     echo ""
     echo "usage:"
     echo ""
-    echo "$me auth user_name base_branch new_branch_name"
+    echo "$me auth user_name base_branch new_branch_name [change number] [change type]"
     echo ""
     echo "parameters:"
     echo ""
@@ -47,7 +18,7 @@ if [[ "$#" -gt 6] or ["$#" -lt 4]]; then
     echo "  basebranch:   branch name to clone from (repository name always here SFDC-MAIN)"
     echo "  branch: name of the change (no spaces) to create a branch"
     echo "  change number (optional): insert here e.g. a targy number 56789. This number will become part of the branch name"
-    echo "  change number (optional): insert here the type of change e.g. US for User Story or BUG for bug. This will be part of the branch name"
+    echo "  change type (optional): insert here the type of change e.g. US for User Story or BUG for bug. This will be part of the branch name"
     echo ""
     echo "example:"
     echo ""
@@ -75,15 +46,15 @@ type="$6" ## might be empty
 
 orig_user_name="konecorp"
 
-if [change_no and type] then;
+if [ change_no ] && [ type ]; then
     path="$repo_name-$type-$change_no-$new_branch_name"
-elif [change_no] then;
+elif change_no; then
     path="$repo_name-$change_no-$new_branch_name"
-elif [type] then;
+elif type; then 
     path="$repo_name-$type-$new_branch_name"
 else
     path="$repo_name-$new_branch_name"
-if
+fi
 
 # abort the script on any failure
 set -e
@@ -108,11 +79,7 @@ fi
 url="$prefix$user_name/$repo_name.git"
 
 
-echo -e "\n\n*** Make sure crlf is converted to lf when committing changed"
-run "git config --local core.autocrlf input"
 
-echo -e "\n\n*** Ignore any file permission changes"
-run "git config --local core.filemode false"
 
 # fork the repo if it hasn't been forked yet
 echo -e "\n\n*** Checking if we need to fork"
@@ -156,15 +123,6 @@ fi
 #    run "python $tool"
 # fi
 
-# setup this fork to track the upstream
-orig_repo_url="$prefix$orig_user_name/$repo_name.git"
-echo -e "\n\n*** Add the remote reference to the KONE github repository $orig_repo_url with the name upstream"
-run "git remote add upstream $orig_repo_url || echo 'already exists'"
-
-echo -e "\n\n*** Add the remote reference to your fork in $user_name of the KONE github repository with the name origin" 
-run "git remote add $url"
-# show the setup
-run "git remote -v"
 
 
 # let's sync the forked repo master with the upstream master if it hasn't been just forked
@@ -177,7 +135,7 @@ run "git remote -v"
 ##fi
 
 
-## CONTINUE HERE
+## TO CHECK CONTINUE HERE
 
 ##git remote -v
 ##— adjust this to be sure, what you pulling:
@@ -221,17 +179,46 @@ echo -e "\n\n*** Set this $new_branch_name's upstream to simplify push and alike
 run "git push --set-upstream origin $new_branch_name"
 run "git branch -vv"
 
-# give parting instructions
-echo -e "\n\n*** Next do: "
+## TO CHECK : is this better as below with upstream and origin - what is the exact difference?
+
+# setup this fork to track the upstream
+#orig_repo_url="$prefix$orig_user_name/$repo_name.git"
+#echo -e "\n\n*** Add the remote reference to the KONE github repository $orig_repo_url with the name upstream"
+#run "git remote add upstream $orig_repo_url || echo 'already exists'"
+
+## TO CHECK: is this origin locally or remote?
+
+#echo -e "\n\n*** Add the remote reference to your fork in $user_name of the KONE github repository with the name origin" 
+#run "git remote add origin $url || echo 'already exists'"
+
+
 # only suggest to chdir if we made a clone
 echo -e "1. Switch to the working dir:\n"
 if [[ "$clone_is_needed" -eq 1 ]]; then
-    echo -e "cd $path\n"
+    run "cd ./$path"
 else
-    echo -e "cd .\n"
+    run "cd ."
 fi
 
-echo -e "3. Do your work.\n"
+echo -e "\n\n*** Make sure crlf is converted to lf when committing changed"
+run "git config --local core.autocrlf input"
+
+echo -e "\n\n*** Ignore any file permission changes"
+run "git config --local core.filemode false"
+
+# show the setup
+echo -e "\n\n*** These are $user_name 's remote branches" 
+run "git remote -v"
+echo -e "\n\n*** This is the local directory we just pulled from remote" 
+run "ls -ltr"
+
+run "cd .."
+run "pwd"
+
+# give parting instructions
+echo -e "\n\n*** Next do: "
+
+echo -e "Do your work.\n"
 echo -e "4. When you're done:\n"
 echo -e "git add -A # Add all changed (including untracked) files to local git repo:"
 echo -e "git add <newfiles> # if you added new files, e.g. src/classes/MyClass.cls"
@@ -240,4 +227,7 @@ echo -e "git push origin $new_branch_name         # push files into  branch\n"
 echo -e "5. Then go to:\n"
 echo -e "  https://github.com/$user_name/$repo_name/tree/$new_branch_name\n"
 echo "review your changes and when you're happy with what you see, submit your PR."
-echo "After you submit your PR, the test and review process will start, pls check the step here: [REPLACE] https://github.com/konecorp/SFDC-MAIN/pull/18710"
+echo "After you submit your PR, the test and review process will start."
+echo "After the test team successfully QAed your feature branch, you will need to merge it to the respective release branch."
+echo "Please check the steps here: https://github.com/konecorp/mavensmate-templates/blob/master/CIScripts/DocMakePR.md"
+echo "For Troubleshooting, have a look here https://github.com/konecorp/mavensmate-templates/blob/master/CIScripts/DocGitHubCommands.md and contact your Github Administrator."
