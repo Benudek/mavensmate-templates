@@ -1,8 +1,8 @@
-Note, if you looking for the developer steps for merging code pls check this Documentation: https://github.com/konecorp/SFDC-MAIN/pull/18707/files#diff-29e43be41c884e0aea08b41d1081a8ee
+Note, if you looking for the developer steps for merging code pls check this Documentation: https://github.com/konecorp/mavensmate-templates/blob/master/CIScripts/DocMakePR.md
 
 ## CMDs other than hub to submit PRs
 
-(https://github.com/github/hub: command line GitHub, see developer github doc also
+https://github.com/github/hub: command line GitHub, see developer github doc also
 https://github.com/jd/git-pull-request
 https://github.com/jehiah/git-open-pull
 https://www.npmjs.com/package/pullr
