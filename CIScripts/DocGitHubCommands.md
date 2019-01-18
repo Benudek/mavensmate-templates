@@ -2,9 +2,43 @@ Note, if you looking for the developer steps for merging code pls check this Doc
 
 ## CMDs other than hub to submit PRs
 
+
+
+## hub  [NEEDS TEST]
+
 https://github.com/github/hub: command line GitHub, see developer github doc also
+
+hub == hub helps you win at git
+
+[`hub`](https://github.com/github/hub) is the command line GitHub. It provides integration between git and github in command line. One of the most useful commands is creating pull request by just typing `hub pull-request` in your terminal.
+
+Installation:
+
+There is a variety of [ways to install](https://github.com/github/hub#installation) this application (written in go), but the easiest is to download the latest binary for your platform at https://github.com/github/hub/releases/latest, un-archiving the package and running `./install`, for example for the `linux-64` build:
+
+```
+wget https://github.com/github/hub/releases/download/v2.5.1/hub-linux-amd64-2.5.1.tgz
+tar -xvzf hub-linux-amd64-2.5.1.tgz
+cd hub-linux-amd64-2.5.1
+sudo ./install
+```
+
+You can add a prefix to install it to a different location, for example, under your home:
+
+```
+prefix=~ ./install
+```
+
+
+```
+curl https://api.github.com/repos/github/hub/releases/latest
+```
+
+
 https://github.com/jd/git-pull-request
+
 https://github.com/jehiah/git-open-pull
+
 https://www.npmjs.com/package/pullr
 
 
