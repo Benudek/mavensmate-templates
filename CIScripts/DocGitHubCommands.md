@@ -41,6 +41,41 @@ https://github.com/jehiah/git-open-pull
 
 https://www.npmjs.com/package/pullr
 
+## Github Where am I?
+
+
+### Where am I? [NEEDS TEST]
+
+
+* Which repository am I in?
+
+   ```
+   git config --get remote.origin.url | sed 's|^.*//||; s/.*@//; s/[^:/]\+[:/]//; s/.git$//'
+   ```
+   e.g.: `Ukko/SFDC-MAIN`
+
+* Which branch am I on?
+
+   ```
+   git branch | sed -n '/\* /s///p'
+   ```
+   e.g.: `new-feature-branch7`
+
+* Combined:
+
+   ```
+   echo $(git config --get remote.origin.url | sed 's|^.*//||; s/.*@//; s/[^:/]\+[:/]//; s/.git$//')/$(git branch | sed -n '/\* /s///p')
+   ```
+   e.g.: `Ukko/SFDC-MAIN/new-feature-branch7`
+
+But that's not a very efficient process to constantly ask the system to tell you where you are. Why not make it automatic and integrate this into your bash prompt (assuming that use bash).
+
+#### bash-git-prompt  [NEEDS TEST]
+
+Enter [`bash-git-prompt`](https://github.com/magicmonty/bash-git-prompt), which not only tells you which virtual environment you are in and which `username`, `repo`, `branch` you're on, but it also provides very useful visual indications on the state of your git checkout - how many files have changed, how many commits are waiting to be pushed, whether there are any upstream changes, and much more.
+
+[EXAMPLE]
+
 
 ## Github Shortcuts
 
