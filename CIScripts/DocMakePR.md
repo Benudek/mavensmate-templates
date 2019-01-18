@@ -13,7 +13,26 @@ Now configure your user.name and user.email:g
 > git config --global user.name "<full name>"
 > git config --global user.email <email>
 
-You can manually fork in the GitHub webUI or just run the script (ADJUST https://github.com/konecorp/SFDC-MAIN/pull/18710/commits/18512f36194c9e057fc6893c6ab87ebd2f8afbaa) to fork.	
+You can manually fork in the GitHub webUI or just run the script (https://github.com/konecorp/mavensmate-templates/blob/master/CIScripts/CreateLocalFeatureBranch to fork following below instructions.
+
+## Some global settings
+
+Depending on other repos you might be using with git, you should set some global settings
+
+Configure git
+
+Set the git user name and email to yours for all repositories
+> git config --global user.name "Ukko Snowland"
+> git config --global user.email Usnowland@lightsummer.com
+
+Make sure crlf is converted to lf when committing changed
+NOTE: Dependent on your own configuration, you might want to apply changes to the specific repository only. Then use --local instead of --global.
+>git config --global core.autocrlf input
+
+Ignore any file permission changes
+>git config --global core.filemode false
+
+Initialize the local repository
 
 
 ## How to Make a Pull Request (PR)
@@ -34,7 +53,7 @@ https://github.com/Ukko/SFDC-MAIN/tree/master/awesomecode
 
 ### Automation
 
-There is a smart [program](ADJUST https://github.com/konecorp/SFDC-MAIN/pull/18710/commits/18512f36194c9e057fc6893c6ab87ebd2f8afbaa) that can do all the heavy lifting for you. Then you just need to do your work, commit changes and submit PR. To run it:
+There is a smart [program](https://github.com/konecorp/mavensmate-templates/blob/master/CIScripts/CreateLocalFeatureBranch) that can do all the heavy lifting for you. Then you just need to do your work, commit changes and submit PR. To run it:
 
 ```
 Copy the script KONE-make-pr-branch to your local machine
@@ -109,7 +128,24 @@ This is where the magic happens.
 
 Create new code, fix bugs - awesome.
 
-### Step 3. Push Your Changes
+During you code, comparing files from the sandbox downloaded with the git repo and refreshing your local branch are two important processes
+
+
+#### How to Keep Your Feature Branch Up-to-date [NEEDS CHECK & TEST]
+
+If you synced the `int` branch with the original repository and you have feature branches that you're still working on, now you want to update those. For example to update your previously existing branch `my-cool-feature`:
+
+   ```
+   git checkout int
+   git pull
+   git checkout my-cool-feature
+   ```
+### Step 3: Copy changes from your metadata to your local git
+
+Your specific workflow will depend on your team and your personal preferences. One typical way of working is to use a code comparison tool to adjust the files in your repo. You first change files in your sandbox, then you download the metadata into a local folder. Then you will compare this metadata with the ones already existing in the gut hub repo you downloaded in the previous step. Use a toll like BeyoncCompare to compare files & folders and copy over the right snippets, particularly for large files like profiles.
+
+
+### Step 4. Push Your Changes
 
 1. When you're happy with the results, commit the new code:
 
@@ -131,7 +167,7 @@ Create new code, fix bugs - awesome.
    git push
    ```
 
-### Step 4. Submit Your PR to merge your feature branch to the INT environment branch
+### Step 5. Submit Your PR to merge your feature branch to the INT environment branch
 
 Go to github and make a new Pull Request:
 
@@ -143,37 +179,28 @@ Go to github and make a new Pull Request:
 
    If you work on several unrelated PRs, make different directories for each one, ideally using the same directory name as the branch name, to simplify things.
 
-### Step 5. Auto Test of Your PR [NEEDS REVISIT, after test script existing]
+### Step 6. Auto Test of Your PR [NEEDS REVISIT, after test script existing]
 
 After you created your PR, a number of scripts will automatically run. All tests need to pass and you need to check this.
 
-### Step 6. Review your PR
+### Step 7. Review your PR
 
 The INT and Staging branch require mandatory one review. You need to arrange within your team, who does that and when. You cannot deploy the change before that. It is part of the developer reponsibility to arrange the review.
 
-### Step 7. Deploy Your PR
+### Step 8. Deploy Your PR
 
 After the automated tests passed and your reviewer approves the change, the changes will deploy. During that deploy the same tests, that run during the Merge will re-run and there will be additional tests run from across the projects
 
-## Step 8. Check for regression errors the next day
+## Step 9. Check for regression errors the next day
 
 Albeit we have 2 test stages, not all relevant tests for your code will have run. Your code might cause regression errors and specifically cause 101 SOQL errors in test scripts. For larg, riskful changes it is good practice to reach out to the Release Manager to check, in any case be prepared to lend a hand if the nightly regression tests report issue the next morning.
 
-## Step 9. Merge your feature branch to a Release branch
+## Step 10. Merge your feature branch to a Release branch
 
   After your feature was successfully QAed by the test team, you will pick the feature branch and open a PR to the respective Release Branch. [THIS NEEDS CHECKING] When opening, automated test scripts will run again. A review will be enforced, this time this a review from the Release Manager however.
 
 ## More Tips & Tricks
 
-### How to Keep Your Feature Branch Up-to-date [NEEDS CHECK & TEST]
-
-If you synced the `int` branch with the original repository and you have feature branches that you're still working on, now you want to update those. For example to update your previously existing branch `my-cool-feature`:
-
-   ```
-   git checkout int
-   git pull
-   git checkout my-cool-feature
-   ```
 
 ### Where am I? [NEEDS TEST]
 
@@ -207,35 +234,6 @@ Enter [`bash-git-prompt`](https://github.com/magicmonty/bash-git-prompt), which 
 
 [EXAMPLE]
 
-
-## hub  [NEEDS TEST]
-
-hub == hub helps you win at git
-
-[`hub`](https://github.com/github/hub) is the command line GitHub. It provides integration between git and github in command line. One of the most useful commands is creating pull request by just typing `hub pull-request` in your terminal.
-
-Installation:
-
-There is a variety of [ways to install](https://github.com/github/hub#installation) this application (written in go), but the easiest is to download the latest binary for your platform at https://github.com/github/hub/releases/latest, un-archiving the package and running `./install`, for example for the `linux-64` build:
-
-```
-wget https://github.com/github/hub/releases/download/v2.5.1/hub-linux-amd64-2.5.1.tgz
-tar -xvzf hub-linux-amd64-2.5.1.tgz
-cd hub-linux-amd64-2.5.1
-sudo ./install
-```
-
-You can add a prefix to install it to a different location, for example, under your home:
-
-```
-prefix=~ ./install
-```
-
-
-```
-curl https://api.github.com/repos/github/hub/releases/latest
-```
-identifying user's platform, retrieving the corresponding to that platform package, unarchiving it, identifying the conda base as shown above, and running `install` with that prefix. If you work on it, please write it in python, so that windows users w/o bash could use it too. It'd go into `tools/hub-install` in the `fastai` repo.
 
 
 Note: as an admin or if there are issues with your git commit, you will find additional commands in the Documentation: [ADJUST LINK] https://github.com/konecorp/SFDC-MAIN/pull/18709
