@@ -1,9 +1,12 @@
-Note, if you looking for the developer steps for merging code pls check this Documentation: https://github.com/konecorp/SFDC-MAIN/pull/18707/files#diff-29e43be41c884e0aea08b41d1081a8ee
+Note, if you looking for the developer steps for merging code pls check this Documentation: https://github.com/konecorp/mavensmate-templates/blob/master/CIScripts/DocMakePR.md
 
 ## CMDs other than hub to submit PRs
 
 
+
 ## hub  [NEEDS TEST]
+
+https://github.com/github/hub: command line GitHub, see developer github doc also
 
 hub == hub helps you win at git
 
@@ -31,8 +34,6 @@ prefix=~ ./install
 curl https://api.github.com/repos/github/hub/releases/latest
 ```
 
-
-https://github.com/github/hub: command line GitHub, see developer github doc also
 
 https://github.com/jd/git-pull-request
 
