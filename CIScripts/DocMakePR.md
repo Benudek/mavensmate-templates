@@ -51,7 +51,7 @@ https://github.com/Ukko/SFDC-MAIN/tree/master/awesomecode
                  username reponame        modulename
 ```
 
-### Automation
+### Step 1. Create your git hub repo
 
 There is a smart [program](https://github.com/konecorp/mavensmate-templates/blob/master/CIScripts/CreateLocalFeatureBranch) that can do all the heavy lifting for you. Then you just need to do your work, commit changes and submit PR. To run it:
 
@@ -70,56 +70,6 @@ For more details run:
 
 
 
-#### Subsequent times
-
-If you make a PR right after you made a fork of the original repository, the two repositories are aligned and you can easily create a PR. If time passes the original repository starts diverging from your fork, so when you work on your PRs you need to keep your master fork in sync with the original repository.
-
-You can tell the state of your fork, by going to https://github.com/Ukko/SFDC-MAIN and seeing something like:
-
-```
-This branch is 331 commits behind fastai:master.
-```
-
-So, let's synchronize the two: [THIS SECTION NEEDS TO TEST AND ADJUSTMENT]
-
-1. Place yourself in the `master` branch of the forked repository, which should be your baseline. Typically that is INT, on other occasions that could be staging:
-
-   * Either you go back to a repository you checked out earlier and switch to the `master` branch:
-
-   ```
-   cd KONE-fork
-   git checkout master
-   ```
-
-   * or you make a new clone
-
-   ```
-   git clone git://github.com/Ukko/SFDC-MAIN.git KONE-fork
-   cd KONE-fork
-   git remote add upstream git@github.com:konecorp/SFDC-MAIN.git
-   ```
-
-     ```
-     
-   Use the https version https://github.com/Ukko/SFDC-MAIN if you don't have ssh configured with github.
-
-2. Sync the forked repository with the original repository:
-
-   ```
-   git fetch upstream
-   git checkout master
-   git merge --no-edit upstream/int
-   git push
-   ```
-
-   Now you can branch off this synced `int` branch.
-
-   Validate that your fork is in sync with the original repository by going to https://github.com/Ukko/SFDC-MAIN and checking that it says:
-
-   ```
-   This branch is even with fastai:int.
-   ```
-   Now you can work on a new PR.
 
 
 ### Step 2. Write Your Code
@@ -132,6 +82,14 @@ During you code, comparing files from the sandbox downloaded with the git repo a
 
 
 #### How to Keep Your Feature Branch Up-to-date [NEEDS CHECK & TEST]
+
+If you make a PR right after you made a fork of the original repository, the two repositories are aligned and you can easily create a PR. If time passes the original repository starts diverging from your fork, so when you work on your PRs you need to keep your master fork in sync with the original repository.
+
+You can tell the state of your fork, by going to https://github.com/Ukko/SFDC-MAIN and seeing something like:
+
+```
+This branch is 331 commits behind fastai:master.
+```
 
 If you synced the `int` branch with the original repository and you have feature branches that you're still working on, now you want to update those. For example to update your previously existing branch `my-cool-feature`:
 
@@ -191,11 +149,11 @@ The INT and Staging branch require mandatory one review. You need to arrange wit
 
 After the automated tests passed and your reviewer approves the change, the changes will deploy. During that deploy the same tests, that run during the Merge will re-run and there will be additional tests run from across the projects
 
-## Step 9. Check for regression errors the next day
+### Step 9. Check for regression errors the next day
 
 Albeit we have 2 test stages, not all relevant tests for your code will have run. Your code might cause regression errors and specifically cause 101 SOQL errors in test scripts. For larg, riskful changes it is good practice to reach out to the Release Manager to check, in any case be prepared to lend a hand if the nightly regression tests report issue the next morning.
 
-## Step 10. Merge your feature branch to a Release branch
+### Step 10. Merge your feature branch to a Release branch
 
   After your feature was successfully QAed by the test team, you will pick the feature branch and open a PR to the respective Release Branch. [THIS NEEDS CHECKING] When opening, automated test scripts will run again. A review will be enforced, this time this a review from the Release Manager however.
 
