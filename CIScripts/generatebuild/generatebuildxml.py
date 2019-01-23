@@ -10,11 +10,12 @@ pip install xlutils
 pip install xlwt
 pip install xlrd
 pip install openpyxl
+pip install beautifulsoup4 #https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 
 '''
 
 # (base) bherudek-ltm1:testpythonbuildxml bherudek$ chmod ugo=rwx *
-# (base) bherudek-ltm1:testpythonbuildxml bherudek$  python generatebuildxml.py -d . -t int -a realdeployandtest -p FSM
+# (base) bherudek-ltm1:testpythonbuildxml bherudek$  python generatebuildxml.py -d . -e intPR -a realdeployandtest -p FSM
 # called in jenkins, potentially with a shell wrapper script
 # params -t(arget) targetenv -a(ction) [checkdeploy|checkdeployandtest|realdeployandtest] 
 # input fix: config file choosetests.xls
@@ -35,17 +36,19 @@ from pathlib import PurePath
 from pathlib import PurePosixPath
 from pathlib import Path
 import os
+import requests
+from bs4 import BeautifulSoup
 
 ##PurePath
 
 def main(argv):
-    correct_usage = 'test.py -t <targetenv> -a <[checkdeploy|checkdeployandtest|realdeployandtest]> -p <optional:[FSM|XYZ|ABX]> -n <optional:[12756]>';
+    correct_usage = 'test.py -e <[intPR|intINCRDeploy|releasePR]> -a <[checkdeploy|checkdeployandtest|realdeployandtest]> -p <optional:[FSM|XYZ|ABX]> -n <optional:[12756]>';
     inputfile = 'choosetests.xlsx'
     templatebuild = 'build_template.xml'
     outputfile = 'build.xml'
     projectteam = 'SHARED'
     try:
-        opts, args = getopt.getopt(argv,"d:t:a:p:n:",["deploypackage", "target=","action=","project","number"])
+        opts, args = getopt.getopt(argv,"d:e:a:p:n:",["deploypackage", "event=","action=","project","number"])
     except getopt.GetoptError:
         print (correct_usage )
         sys.exit(2)
@@ -55,23 +58,29 @@ def main(argv):
             sys.exit()
         elif opt in ("-d", "--deploypackage"):
             deploypackagepath = arg
-        elif opt in ("-t", "--targetenv"):
-            targetenv = arg
+        elif opt in ("-e", "--event"):
+            event = arg
+            if event not in {"intPR","intINCRDeploy", "releasePR"}:
+                print ('event: ' + str(action))
+                print ('Pls set correct event.\n') 
+                print (correct_usage )
+                sys.exit()
         elif opt in ("-p", "--project"):
             projectteam = arg 
         elif opt in ("-a", "--action"):
             action = arg
-            if action not in {"checkdeploy","realdeployandtest"}:
+            if action not in {"checkdeployonly","checkdeployandtest", "realdeployandtest"}:
                 print ('action: ' + str(action))
                 print ('Pls set correct action.\n') 
                 print (correct_usage )
                 sys.exit()
 
-    print ('target environment is ' +str(targetenv))
+    print ('event environment is ' +str(event))
     print ('action requested is ' + str(action))
     excel_sheet = pd.read_excel(inputfile)
     #print (excel_sheet)
 
+    ## instead of relying on a file, we could also go to the PR on git: https://developer.github.com/v3/pulls/#list-pull-requests-files
     print(deploypackagepath)
     p = Path(deploypackagepath)
     #print(p.glob('**/*.cls'))
@@ -112,14 +121,37 @@ def main(argv):
             #print('list_enum_allproj: ' + str(enum_allproj[1]))
             list_tests_torun.append(str(enum_allproj[1]))
         
+    ## now we add tests that the develper requested per targy with a REST CALL
+    
+    username = 'bherudek@salesforce.com'
+    password = 'Tanzen03'
+    top_level_url = 'https://kone.tpondemand.com'
+    url = 'https://kone.tpondemand.com/api/v1/UserStories/33306/tasks/'
+    r = requests.get(url, auth=(username, password), stream=True)  
+    page = r.content
+    soup = BeautifulSoup(str(page),  'html.parser') #'lxml')
+    #print(soup.prettify())
+    #print(soup.getText())
+    for subsoup in soup.tasks.find_all('task'):
+        if subsoup['name'] == 'APEXTESTS':
+            #print(subsoup.getText())
+            #print(subsoup['name'])
+            #print(subsoup.find_all('description')):
+            for desc in subsoup.find_all('description'):
+                
+                #print(desc)
+                dev_tests_list = desc.getText().replace('</div>','').replace('\\r','').replace('\\n','').split("<div>")
+                developer_tests_list = [x for x in dev_tests_list if x]
+                #print(developer_tests_list)
 
-    ## per team we rerun certain tests always
-    
-    #projectteam
-    
+  
+    all_test_to_run = list_tests_torun + developer_tests_list
+    print(list_tests_torun)
+
     #print(excel_sheet.loc[excel_sheet['A'] == 'foo'])
-    list_tests_torun_nodup = list(set(list_tests_torun))
-    #print('list_tests_torun_nodup: ' + str(list_tests_torun_nodup))
+    list_tests_torun_nodup = list(set(all_test_to_run))
+
+    print('list_tests_torun_nodup: ' + str(list_tests_torun_nodup))
 
     ## now we add tests, if action chosen accordingly
    
@@ -140,6 +172,29 @@ def main(argv):
                 line =''
         f2.write(line)
     f2.close
-            
+
+    ## now we make a note into the Pull Request, that this PR was tested and deployed.
+    ## Note: after the run, there should be a python script running too giving back the results
+    ## This is useful for bookkeeping but also for the developer and reviewers
+    ## https://developer.github.com/v3/pulls/comments/
+    ## POST /repos/:owner/:repo/pulls/:number/comments
+        ## {
+            ##"body": "Nice change",
+            ##"commit_id": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
+            ##"path": "file1.txt",
+            ##"position": 4
+        ## }
+    ## comments on PRs go via the ISSUE API: 
+        # https://developer.github.com/v3/guides/working-with-comments/#pull-request-comments
+        # https://developer.github.com/v3/issues/comments/#create-a-comment
+    ## example:
+        # https://github.com/octocat/Spoon-Knife/pull/1176
+        # https://github.com/github/platform-samples/blob/master/api/ruby/working-with-comments/pull_request_comment.rb    
+
+    ## Note,  PR and merges can be done from the command line
+    ## https://hackernoon.com/how-to-git-pr-from-the-command-line-a5b204a57ab1
+    ## for branches, where we do not require a review from an Architect, we could automatically merge them 
+    ## after all tests passed
+
 if __name__ == "__main__":
    main(sys.argv[1:])
