@@ -15,7 +15,7 @@ pip install beautifulsoup4 #https://www.crummy.com/software/BeautifulSoup/bs4/do
 '''
 
 # (base) bherudek-ltm1:testpythonbuildxml bherudek$ chmod ugo=rwx *
-# (base) bherudek-ltm1:testpythonbuildxml bherudek$  python generatebuildxml.py -d . -e intPR -a realdeployandtest -p FSM
+# (base) bherudek-ltm1:testpythonbuildxml bherudek$  python generatebuildxml.py -d . -e intPR -a realdeployandtest -p FSM 33306
 # called in jenkins, potentially with a shell wrapper script
 # params -t(arget) targetenv -a(ction) [checkdeploy|checkdeployandtest|realdeployandtest] 
 # input fix: config file choosetests.xls
@@ -47,8 +47,9 @@ def main(argv):
     templatebuild = 'build_template.xml'
     outputfile = 'build.xml'
     projectteam = 'SHARED'
+    change_no = '0'
     try:
-        opts, args = getopt.getopt(argv,"d:e:a:p:n:",["deploypackage", "event=","action=","project","number"])
+        opts, args = getopt.getopt(argv,"d:e:a:p:n:",["deploypackagedirectory", "event=","action=","project","numberchange"])
     except getopt.GetoptError:
         print (correct_usage )
         sys.exit(2)
@@ -56,11 +57,13 @@ def main(argv):
         if opt == '-h':
             print (correct_usage )
             sys.exit()
-        elif opt in ("-d", "--deploypackage"):
+        elif opt in ("-d", "--deploypackagedirectory"):
             deploypackagepath = arg
+        elif opt in ("-n", "--numberchange"):
+            change_no = arg   
         elif opt in ("-e", "--event"):
             event = arg
-            if event not in {"intPR","intINCRDeploy", "releasePR"}:
+            if event not in {"intPR","intINCRDeploy", "releasePR", "PRODINCRDeploy"}:
                 print ('event: ' + str(action))
                 print ('Pls set correct event.\n') 
                 print (correct_usage )
@@ -84,6 +87,7 @@ def main(argv):
     print(deploypackagepath)
     p = Path(deploypackagepath)
     #print(p.glob('**/*.cls'))
+    # Note, test classes in the repo get added automatically for test (self reference in excel sheet)
     list_files = list(p.glob('**/*.cls'))
     #print(list_files)
     files_as_keys = list()
@@ -123,15 +127,17 @@ def main(argv):
         
     ## now we add tests that the develper requested per targy with a REST CALL
     
+    ## TO DO: set better user
     username = 'bherudek@salesforce.com'
     password = 'Tanzen03'
     top_level_url = 'https://kone.tpondemand.com'
-    url = 'https://kone.tpondemand.com/api/v1/UserStories/33306/tasks/'
+    url = 'https://kone.tpondemand.com/api/v1/UserStories/' + change_no + '/tasks/'
     r = requests.get(url, auth=(username, password), stream=True)  
     page = r.content
     soup = BeautifulSoup(str(page),  'html.parser') #'lxml')
     #print(soup.prettify())
     #print(soup.getText())
+    developer_tests_list =[]
     for subsoup in soup.tasks.find_all('task'):
         if subsoup['name'] == 'APEXTESTS':
             #print(subsoup.getText())
@@ -144,16 +150,52 @@ def main(argv):
                 developer_tests_list = [x for x in dev_tests_list if x]
                 #print(developer_tests_list)
 
-  
     all_test_to_run = list_tests_torun + developer_tests_list
-    print(list_tests_torun)
+    #print(list_tests_torun)
 
+  
+
+   
+    ## now we add tests, if action chosen accordingly
+    plus_test_lists =[]
+    minus_test_lists = []
+
+    if event == "intPR":
+        plus_test_lists = excel_sheet.loc[excel_sheet['TestOn_IntPullRequest_Overwrite'] == 'yes' , 'TestsToRun1']
+        minus_test_lists = excel_sheet.loc[excel_sheet['TestOn_IntPullRequest_Overwrite'] == 'no' , 'TestsToRun1']
+    elif event == "intINCRDeploy":
+        plus_test_lists = excel_sheet.loc[excel_sheet['TestOn_IntIncrDeploy_Overwrite'] == 'yes' , 'TestsToRun1']
+        minus_test_lists = excel_sheet.loc[excel_sheet['TestOn_IntIncrDeploy_Overwrite'] == 'no' , 'TestsToRun1']
+    elif event == "releasePR":
+        plus_test_lists = excel_sheet.loc[excel_sheet['TestOn_ReleasePullRequest_Overwrite'] == 'yes' , 'TestsToRun1']
+        minus_test_lists = excel_sheet.loc[excel_sheet['TestOn_ReleasePullRequest_Overwrite'] == 'no' , 'TestsToRun1']
+    elif event == "PRODINCRDeploy":
+        plus_test_lists = excel_sheet.loc[excel_sheet['TestOn_PRODIncrDeploy_Overwrite'] == 'yes' , 'TestsToRun1']
+        minus_test_lists = excel_sheet.loc[excel_sheet['TestOn_PRODIncrDeploy_Overwrite'] == 'no' , 'TestsToRun1']
+
+    list_enum_plustests = list(enumerate(plus_test_lists))
+    #print('list_enum_allproj: ' + str(list_enum_allproj))
+    for enum_plustest in list_enum_plustests:
+        if str(enum_plustest[1]) not in {'0', '?', 'nan'}:
+            #print('list_enum_allproj: ' + str(enum_allproj[1]))
+            all_test_to_run.append(str(enum_plustest[1]))
+
+    list_enum_minustests = list(enumerate(minus_test_lists))
+    #print('list_enum_allproj: ' + str(list_enum_allproj))
+    for enum_minustest in list_enum_minustests:
+        if str(enum_minustest[1]) not in {'0', '?', 'nan'}:
+            #print('list_enum_allproj: ' + str(enum_allproj[1]))
+            try:
+                all_test_to_run.remove(str(enum_minustest[1]))
+            except ValueError:     
+                None
     #print(excel_sheet.loc[excel_sheet['A'] == 'foo'])
     list_tests_torun_nodup = list(set(all_test_to_run))
-
     print('list_tests_torun_nodup: ' + str(list_tests_torun_nodup))
 
-    ## now we add tests, if action chosen accordingly
+
+
+
    
     f = open('./' + templatebuild, 'r')
     linelist = f.readlines()
