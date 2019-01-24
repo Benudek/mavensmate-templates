@@ -165,7 +165,7 @@ def main(argv):
         todo = ', please check the failed testscripts for Pull Request: ' + PRURL
         joke = requests.get(joke_url, headers=headers, stream=True)
         #print(joke.json())
-        cheerup = 'Never give up, here is a joke to cheer you up:' + str(joke.json())
+        cheerup = '\nNever give up, here is a joke to cheer you up:' + str(joke.json())
         comment = addressee + todo + cheerup #str(joke.json())
         #print(comment)
         #comment = 'test'
